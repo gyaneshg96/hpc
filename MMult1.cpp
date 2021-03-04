@@ -26,6 +26,13 @@ void MMult0(long m, long n, long k, double *a, double *b, double *c) {
 
 void MMult1(long m, long n, long k, double *a, double *b, double *c) {
   // TODO: See instructions below
+  for (long i = 0; i < n; i = i + BLOCK_SIZE){
+    for (long j = 0; j < n; j = j + BLOCK_SIZE){
+      for (long k = 0; k < n; k = k + BLOCK_SIZE){
+        MMult0(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE, a+i*n+k,  b+k*n + j, c + i*n + j);
+      }
+    }
+  }
 }
 
 int main(int argc, char** argv) {
@@ -58,8 +65,8 @@ int main(int argc, char** argv) {
       MMult1(m, n, k, a, b, c);
     }
     double time = t.toc();
-    double flops = 0; // TODO: calculate from m, n, k, NREPEATS, time
-    double bandwidth = 0; // TODO: calculate from m, n, k, NREPEATS, time
+    double flops = 4*m*n*k*NREPEATS/(time * 1e9); // TODO: calculate from m, n, k, NREPEATS, time
+    double bandwidth = sizeof(double)*NREPEATS*(m*n + k*n + m*k + m*n*k)/(time*1e9) ; // TODO: calculate from m, n, k, NREPEATS, time
     printf("%10ld %10f %10f %10f", p, time, flops, bandwidth);
 
     double max_err = 0;

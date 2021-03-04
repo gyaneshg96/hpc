@@ -74,7 +74,8 @@ void junk_data ( )
   int i;
   int *x;
 
-  x = new int[10];
+  // x = new int[10];
+  x = ( int * ) calloc ( 10, sizeof ( int ) );
 //
 //  X = { 0, 1, 2, 3, 4, ?a, ?b, ?c, ?d, ?e }.
 //
@@ -86,8 +87,9 @@ void junk_data ( )
 //  Copy some values.
 //  X = { 0, 1, ?c, 3, 4, ?b, ?b, ?c, ?d, ?e }.
 //
-  x[2] = x[7];
-  x[5] = x[6];
+  *(x + 2) = *(x + 7);
+  *(x + 5) = *(x + 6);
+  // x[5] = x[6];
 //
 //  Modify some uninitialized entries.
 //  Memcheck doesn't seem to care about this.
@@ -104,7 +106,7 @@ void junk_data ( )
     cout << "  " << i << "  " << x[i] << "\n";
   }
 
-  delete [] x;
+  free(x);
 
   return;
 }

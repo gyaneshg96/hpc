@@ -70,6 +70,7 @@ void f ( int n )
   int *x;
 
   x = ( int * ) malloc ( (n+1) * sizeof ( int ) );
+  //the array size should be (n+1) or we can run the loop until 11 size
 
   x[0] = 1;
   cout << "  " << 0 << "  " << x[0] << "\n";
@@ -83,7 +84,8 @@ void f ( int n )
     cout << "  " << i << "  " << x[i] << "\n";
   }
 
-  // delete [] x;
+  // delete is used on array objects which is different from just a malloc of contiguous
+  // elements
   free(x);
 
   return;

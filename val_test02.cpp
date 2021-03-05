@@ -74,8 +74,9 @@ void junk_data ( )
   int i;
   int *x;
 
-  // x = new int[10];
   x = ( int * ) calloc ( 10, sizeof ( int ) );
+  //calloc is used to initialize values to 0. So they will not contain garbage values
+
 //
 //  X = { 0, 1, 2, 3, 4, ?a, ?b, ?c, ?d, ?e }.
 //

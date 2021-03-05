@@ -23,13 +23,26 @@ void MMult0(long m, long n, long k, double *a, double *b, double *c) {
     }
   }
 }
-
+void MMultUtil(long m, long n, long k, double *a, double *b, double *c) {
+  for (long j = 0; j < BLOCK_SIZE; j++) {
+    for (long p = 0; p < BLOCK_SIZE; p++) {
+      for (long i = 0; i < BLOCK_SIZE; i++) {
+        double A_ip = *(a + i+p*m);
+        double B_pj = *(b + p+j*k);
+        double C_ij = *(c + i+j*m);
+        C_ij = C_ij + A_ip * B_pj;
+        *(c + i+j*m) = C_ij;
+      }
+    }
+  }
+}
 void MMult1(long m, long n, long k, double *a, double *b, double *c) {
   // TODO: See instructions below
-  for (long i = 0; i < n; i = i + BLOCK_SIZE){
-    for (long j = 0; j < n; j = j + BLOCK_SIZE){
-      for (long k = 0; k < n; k = k + BLOCK_SIZE){
-        MMult0(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE, a+i*n+k,  b+k*n + j, c + i*n + j);
+  for (long j = 0; j < n; j = j + BLOCK_SIZE){
+    for (long p = 0; p < k; p = p + BLOCK_SIZE){
+      for (long i = 0; i < m; i = i + BLOCK_SIZE){
+        MMultUtil(m,n,k, a+p*m+i,  b+k*j + p, c + j*m + i);
+        // std::cout<<i<<" "<<j<<" "<<k<<std::endl;
       }
     }
   }
@@ -44,6 +57,7 @@ int main(int argc, char** argv) {
   for (long p = PFIRST; p < PLAST; p += PINC) {
     long m = p, n = p, k = p;
     long NREPEATS = 1e9/(m*n*k)+1;
+    // long NREPEATS = 1;
     double* a = (double*) aligned_malloc(m * k * sizeof(double)); // m x k
     double* b = (double*) aligned_malloc(k * n * sizeof(double)); // k x n
     double* c = (double*) aligned_malloc(m * n * sizeof(double)); // m x n

@@ -1,0 +1,24 @@
+Machine Details :
+model name      : Intel(R) Core(TM) i5-7200U CPU @ 2.50GHz
+memory          : 8 GB
+cache size      : 256 KB
+cores           : 4
+address sizes   : 36 bits physical, 48 bits virtual
+
+
+1.knm is the best order of all the possibilities as per the experiment because 
+  The inner loop containing 'i' is a part of A and C.
+  To access different i, we can easily read in the entire column, as it is column major (pth and jth for A and C respectively)
+  and this is done only once in the inner loop.
+
+2. Blocksize for which best performance is achieved :  32
+
+3. Peak flop rate = Number of cores * Average frequency * number of instructions * No. of cpus
+= 2 * 2.50 * 4 * 4 = 80 Gflops/S
+
+Best flop rate achieved  ~ 10 Gflops/sec
+So percentage = 12.5 %
+
+
+
+

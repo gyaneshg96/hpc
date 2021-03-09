@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 #include <math.h>
-// #include <omp.h> 
+#include <omp.h>
 #include "utils.h"
 
 #define BLOCK_SIZE 16
@@ -10,81 +10,101 @@
 // Note: matrices are stored in column major order; i.e. the array elements in
 // the (m x n) matrix C are stored in the sequence: {C_00, C_10, ..., C_m0,
 // C_01, C_11, ..., C_m1, C_02, ..., C_0n, C_1n, ..., C_mn}
-void MMult0(long m, long n, long k, double *a, double *b, double *c) {
-  for (long j = 0; j < n; j++) {
-    for (long p = 0; p < k; p++) {
-      for (long i = 0; i < m; i++) {
-        double A_ip = a[i+p*m];
-        double B_pj = b[p+j*k];
-        double C_ij = c[i+j*m];
+void MMult0(long m, long n, long k, double *a, double *b, double *c)
+{
+    for (long p = 0; p < k; p++)
+    {
+  for (long j = 0; j < n; j++)
+  {
+      for (long i = 0; i < m; i++)
+      {
+        double A_ip = a[i + p * m];
+        double B_pj = b[p + j * k];
+        double C_ij = c[i + j * m];
         C_ij = C_ij + A_ip * B_pj;
-        c[i+j*m] = C_ij;
+        c[i + j * m] = C_ij;
       }
     }
   }
 }
-void MMultUtil(long m, long n, long k, double *a, double *b, double *c) {
-  for (long j = 0; j < BLOCK_SIZE; j++) {
-    for (long p = 0; p < BLOCK_SIZE; p++) {
-      for (long i = 0; i < BLOCK_SIZE; i++) {
-        double A_ip = *(a + i+p*m);
-        double B_pj = *(b + p+j*k);
-        double C_ij = *(c + i+j*m);
-        C_ij = C_ij + A_ip * B_pj;
-        *(c + i+j*m) = C_ij;
-      }
-    }
-  }
-}
-void MMult1(long m, long n, long k, double *a, double *b, double *c) {
+void MMult1(long m, long n, long k, double *a, double *b, double *c)
+{
   // TODO: See instructions below
-  for (long j = 0; j < n; j = j + BLOCK_SIZE){
-    for (long p = 0; p < k; p = p + BLOCK_SIZE){
-      for (long i = 0; i < m; i = i + BLOCK_SIZE){
-        MMultUtil(m,n,k, a+p*m+i,  b+k*j + p, c + j*m + i);
-        // std::cout<<i<<" "<<j<<" "<<k<<std::endl;
+  // #pragma omp parallel for
+  for (long p = 0; p < k; p = p + BLOCK_SIZE)
+  {
+    for (long j = 0; j < n; j = j + BLOCK_SIZE)
+    {
+      for (long i = 0; i < m; i = i + BLOCK_SIZE)
+      {
+        for (long pp = p; pp < p + BLOCK_SIZE; pp++)
+          {
+        for (long jj = j; jj < j + BLOCK_SIZE; jj++)
+        {
+      for (long ii = i; ii < i + BLOCK_SIZE; ii++)
+      {
+            double sum = *(c + jj * m + ii);
+            double aij = *(a + pp * m + ii);
+            double bjp = *(b + jj * k + pp);
+            sum += aij * bjp;
+            *(c + jj * m + ii) = sum;
+            // MMultUtil(m,n,k, a+p*m+i,  b+k*j + p, c + j*m + i)
+          }
+        }
+      }
       }
     }
   }
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv)
+{
   const long PFIRST = BLOCK_SIZE;
   const long PLAST = 2000;
-  const long PINC = std::max(50/BLOCK_SIZE,1) * BLOCK_SIZE; // multiple of BLOCK_SIZE
+  const long PINC = std::max(50 / BLOCK_SIZE, 1) * BLOCK_SIZE; // multiple of BLOCK_SIZE
 
-  printf(" Dimension       Time    Gflop/s       GB/s        Error\n");
-  for (long p = PFIRST; p < PLAST; p += PINC) {
+  printf(" Dimension     Time1  Time    Gflop/s       GB/s        Error\n");
+  for (long p = PFIRST; p < PLAST; p += PINC)
+  {
     long m = p, n = p, k = p;
-    long NREPEATS = 1e9/(m*n*k)+1;
+    long NREPEATS = 1e9 / (m * n * k) + 1;
     // long NREPEATS = 1;
-    double* a = (double*) aligned_malloc(m * k * sizeof(double)); // m x k
-    double* b = (double*) aligned_malloc(k * n * sizeof(double)); // k x n
-    double* c = (double*) aligned_malloc(m * n * sizeof(double)); // m x n
-    double* c_ref = (double*) aligned_malloc(m * n * sizeof(double)); // m x n
+    double *a = (double *)aligned_malloc(m * k * sizeof(double));     // m x k
+    double *b = (double *)aligned_malloc(k * n * sizeof(double));     // k x n
+    double *c = (double *)aligned_malloc(m * n * sizeof(double));     // m x n
+    double *c_ref = (double *)aligned_malloc(m * n * sizeof(double)); // m x n
 
     // Initialize matrices
-    for (long i = 0; i < m*k; i++) a[i] = drand48();
-    for (long i = 0; i < k*n; i++) b[i] = drand48();
-    for (long i = 0; i < m*n; i++) c_ref[i] = 0;
-    for (long i = 0; i < m*n; i++) c[i] = 0;
-
-    for (long rep = 0; rep < NREPEATS; rep++) { // Compute reference solution
-      MMult0(m, n, k, a, b, c_ref);
-    }
+    for (long i = 0; i < m * k; i++)
+      a[i] = drand48();
+    for (long i = 0; i < k * n; i++)
+      b[i] = drand48();
+    for (long i = 0; i < m * n; i++)
+      c_ref[i] = 0;
+    for (long i = 0; i < m * n; i++)
+      c[i] = 0;
 
     Timer t;
     t.tic();
-    for (long rep = 0; rep < NREPEATS; rep++) {
+    for (long rep = 0; rep < NREPEATS; rep++)
+    { // Compute reference solution
+      MMult0(m, n, k, a, b, c_ref);
+    }
+
+    double t1 = t.toc();
+    t.tic();
+    for (long rep = 0; rep < NREPEATS; rep++)
+    {
       MMult1(m, n, k, a, b, c);
     }
     double time = t.toc();
-    double flops = 4*m*n*k*NREPEATS/(time * 1e9); // TODO: calculate from m, n, k, NREPEATS, time
-    double bandwidth = sizeof(double)*NREPEATS*(m*n + k*n + m*k + m*n*k)/(time*1e9) ; // TODO: calculate from m, n, k, NREPEATS, time
-    printf("%10ld %10f %10f %10f", p, time, flops, bandwidth);
+    double flops = 2 * m * n * k * NREPEATS / (time) / 1e9;                                            // TODO: calculate from m, n, k, NREPEATS, time
+    double bandwidth = sizeof(double) * NREPEATS * (m * n + k * n + m * k + m * n * k) / (time * 1e9); // TODO: calculate from m, n, k, NREPEATS, time
+    printf("%10ld %10f %10f %10f %10f", p, t1, time, flops, bandwidth);
 
     double max_err = 0;
-    for (long i = 0; i < m*n; i++) max_err = std::max(max_err, fabs(c[i] - c_ref[i]));
+    for (long i = 0; i < m * n; i++)
+      max_err = std::max(max_err, fabs(c[i] - c_ref[i]));
     printf(" %10e\n", max_err);
 
     aligned_free(a);

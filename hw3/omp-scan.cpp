@@ -40,7 +40,7 @@ void scan_omp(long *prefix_sum, const long *A, long n, int nthreads)
     // cout<<"Parallel "<<tid<<endl;
     // long* residuals = (long *)malloc(block * sizeof(long));
     if (tid == 0){
-      cout<<"Number of threads "<<omp_get_num_threads();
+      cout<<"Number of threads "<<omp_get_num_threads()<<endl;
     }
     // cout<<"Thread id "<<tid<<endl;
     for (long i = tid * (block) + 1; i < block + tid * (block); i++)
@@ -49,8 +49,6 @@ void scan_omp(long *prefix_sum, const long *A, long n, int nthreads)
       prefix_sum[i] = prefix_sum[i - 1] + A[i];
     }
   }
-  cout<<"Serial"<<endl;
-  //serial part
   residuals[0] = 0;
   for (long i = 1; i < nthreads; i++)
   {
@@ -81,7 +79,6 @@ int main(int argc, char **args)
   long *B1 = (long *)malloc(N * sizeof(long));
   for (long i = 0; i < N; i++){
     A[i] = rand();
-    // cout<<A[i]<<endl;
   }
 
   double tt = omp_get_wtime();
@@ -96,7 +93,6 @@ int main(int argc, char **args)
   long err = 0;
   for (long i = 0; i < N; i++){
     err = std::max(err, std::abs(B0[i] - B1[i]));
-    // cout<<B0[i]<<" "<<B1[i]<<endl;
   }
   printf("error = %ld\n", err);
 

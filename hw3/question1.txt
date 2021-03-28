@@ -1,0 +1,51 @@
+Question 1:
+
+i) For normal static scheduling, 
+thread 0 -> 1...n/2
+thread 1 -> n/2 + 1...n-1 iterations.
+
+So time taken for thread 0  = 1 + 2 + ... + (n-1)/2 
+So time taken for thread 1  = (n+1)/2 +  + ... + n - 1 
+
+Thread 0 finishes first and it will wait
+
+For loop 2,
+Time taken for thread 0 = (n-1) + (n-2) + ... + (n - (n-1)/2) ms = n*n/2 - (n/2+1)*n/4 ms
+
+Time taken for thread 1 to finish =  (n-(n+1)/2) + ... + (n - (n-1))
+
+So thread 1 will wait for 0 to finish.
+
+Total time taken = 2 * ((n - 1) + (n - 2) + ... + (n- (n-1)/2) = 
+                 = n*(n-1) - (n+1)(n-1)/2 = (n-1)(n-1)/2 ms
+
+
+ii) In static scheduling with 1 block size, (assuming n is odd)
+thread 0 -> 1, 3 ... n-2
+thread 1 -> 2, 4,... n-1
+
+So for thread 0 time for 1st loop = 1 + 3 + .. n-2 =
+So for thread 1 time = 2 + 4 + .. n - 1
+
+Thread 0 will finish 1st and wait
+
+For loop 2,
+Time taken for thread 0 = (n-1) + (n-3) + ... + (n - (n-2)) ms
+
+Time taken for thread 1 = (n-2) + (n-4) + ... + (n - (n-1)) ms
+
+So, thread 1 will wait for thread 1
+
+Total time taken = 2*(2 + 4 + ... + (n-1))
+= 4*((n-1)(n+1)/8) = (n-1)(n+1)/2 ms
+
+
+iii) In dynamic scheduling with 1 chunk size, the thread will take in whichever iteration is next to be done.
+So, it will follow similar pattern to the static scheduling with size 1. However, due to communication
+between threads, this will probably take more time than static case.
+
+iv) The clause is nowait and assuming static scheduling in that case,
+for thread 0 -> 1 + 2 + ... + (n-1)/2 + (n - 1) + (n - 2) + ... + (n - (n-1)/2) = n*(n-1)/2 ms 
+for thread 1 -> (n+1)/2 +  ... + n-1 + (n - (n+1)/2) + ... + (n - (n-1)) = n*(n-1)/2 ms 
+
+So both end at same time

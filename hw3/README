@@ -1,0 +1,2 @@
+for running omp-scan, run omp-scan <NUM_THREADS>
+for running jacobi or gs, run jacobi2D-omp <MATRIX SIZE> <NUM_THREADS>

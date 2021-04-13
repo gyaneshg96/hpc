@@ -103,72 +103,72 @@ int main(int argc, char * argv[]){
     //deal with corners
     if (mpirank == 0){
       MPI_Send(vertical2, ln, MPI_DOUBLE, 1, 123, MPI_COMM_WORLD);
-      MPI_Recv(vertical3, ln, MPI_DOUBLE, 1, 124, MPI_COMM_WORLD, &status1);
+      MPI_Recv(vertical3, ln, MPI_DOUBLE, 1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       MPI_Send(&lunew[ln*(ln+2) + 1], ln, MPI_DOUBLE, rootp, 123, MPI_COMM_WORLD);
-      MPI_Recv(&lunew[(ln+1)*(ln+2) + 1], ln, MPI_DOUBLE, rootp, 124, MPI_COMM_WORLD, &status1);
+      MPI_Recv(&lunew[(ln+1)*(ln+2) + 1], ln, MPI_DOUBLE, rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
     else if (mpirank == p - 1){
       MPI_Send(vertical1, ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
-      MPI_Recv(vertical4, ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, &status1);
-      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
-      MPI_Recv(&lunew[1], ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, &status1);
+      MPI_Recv(vertical4, ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank - rootp, 123, MPI_COMM_WORLD);
+      MPI_Recv(&lunew[1], ln, MPI_DOUBLE, mpirank - rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
     else if (mpirank == rootp - 1){
       MPI_Send(vertical1, ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
-      MPI_Recv(vertical4, ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, &status1);
-      MPI_Send(&lunew[ln*(ln+2) + 1], ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
-      MPI_Recv(&lunew[(ln+1)*(ln+2) +1], ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, &status1);
+      MPI_Recv(vertical4, ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(&lunew[ln*(ln+2) + 1], ln, MPI_DOUBLE, mpirank + rootp, 123, MPI_COMM_WORLD);
+      MPI_Recv(&lunew[(ln+1)*(ln+2) +1], ln, MPI_DOUBLE, mpirank + rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
     else if (mpirank == rootp*(rootp - 1)){
-      MPI_Send(vertical2, ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
-      MPI_Recv(vertical3, ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, &status1);
-      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
-      MPI_Recv(&lunew[1], ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, &status1);
+      MPI_Send(vertical2, ln, MPI_DOUBLE, mpirank+1, 123, MPI_COMM_WORLD);
+      MPI_Recv(vertical3, ln, MPI_DOUBLE, mpirank+1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank-rootp, 123, MPI_COMM_WORLD);
+      MPI_Recv(&lunew[1], ln, MPI_DOUBLE, mpirank-rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
     //deal with edges
     else if (mpirank < rootp - 1) {
       MPI_Send(vertical1, ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
-      MPI_Recv(vertical4, ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, &status1);
-      MPI_Send(vertical2, ln, MPI_DOUBLE, 1, 123, MPI_COMM_WORLD);
-      MPI_Recv(vertical3, ln, MPI_DOUBLE, 1, 124, MPI_COMM_WORLD, &status1);
-      MPI_Send(&lunew[ln*(ln+2) + 1], ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
-      MPI_Recv(&lunew[(ln+1)*(ln+2) +1], ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, &status1);
+      MPI_Recv(vertical4, ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(vertical2, ln, MPI_DOUBLE, mpirank+1, 123, MPI_COMM_WORLD);
+      MPI_Recv(vertical3, ln, MPI_DOUBLE, mpirank+1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(&lunew[ln*(ln+2) + 1], ln, MPI_DOUBLE, mpirank+rootp, 123, MPI_COMM_WORLD);
+      MPI_Recv(&lunew[(ln+1)*(ln+2) +1], ln, MPI_DOUBLE, mpirank+rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
     else if (mpirank > rootp*(rootp - 1)) {
       MPI_Send(vertical1, ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
-      MPI_Recv(vertical4, ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, &status1);
-      MPI_Send(vertical2, ln, MPI_DOUBLE, 1, 123, MPI_COMM_WORLD);
-      MPI_Recv(vertical3, ln, MPI_DOUBLE, 1, 124, MPI_COMM_WORLD, &status1);
-      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
-      MPI_Recv(&lunew[1], ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, &status1);
+      MPI_Recv(vertical4, ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(vertical2, ln, MPI_DOUBLE, mpirank+1, 123, MPI_COMM_WORLD);
+      MPI_Recv(vertical3, ln, MPI_DOUBLE, mpirank+1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank-rootp, 123, MPI_COMM_WORLD);
+      MPI_Recv(&lunew[1], ln, MPI_DOUBLE, mpirank-rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
     else if (mpirank % rootp == 0){
-      MPI_Send(vertical2, ln, MPI_DOUBLE, 1, 123, MPI_COMM_WORLD);
-      MPI_Recv(vertical3, ln, MPI_DOUBLE, 1, 124, MPI_COMM_WORLD, &status1);
-      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
-      MPI_Recv(&lunew[1], ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, &status1);
-      MPI_Send(&lunew[ln*(ln+2) + 1], ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
-      MPI_Recv(&lunew[(ln+1)*(ln+2) +1], ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, &status1);
+      MPI_Send(vertical2, ln, MPI_DOUBLE, mpirank+1, 123, MPI_COMM_WORLD);
+      MPI_Recv(vertical3, ln, MPI_DOUBLE, mpirank+1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank-rootp, 123, MPI_COMM_WORLD);
+      MPI_Recv(&lunew[1], ln, MPI_DOUBLE, mpirank-rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(&lunew[ln*(ln+2) + 1], ln, MPI_DOUBLE, mpirank+rootp, 123, MPI_COMM_WORLD);
+      MPI_Recv(&lunew[(ln+1)*(ln+2) +1], ln, MPI_DOUBLE, mpirank+rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
     else if (mpirank % rootp == rootp - 1){
-      MPI_Send(vertical1, ln, MPI_DOUBLE, 1, 123, MPI_COMM_WORLD);
-      MPI_Recv(vertical4, ln, MPI_DOUBLE, 1, 124, MPI_COMM_WORLD, &status1);
-      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
-      MPI_Recv(&lunew[1], ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, &status1);
-      MPI_Send(&lunew[ln*(ln+2) + 1], ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
-      MPI_Recv(&lunew[(ln+1)*(ln+2) +1], ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, &status1);
+      MPI_Send(vertical1, ln, MPI_DOUBLE, mpirank - 1, 123, MPI_COMM_WORLD);
+      MPI_Recv(vertical4, ln, MPI_DOUBLE, mpirank - 1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank-rootp, 123, MPI_COMM_WORLD);
+      MPI_Recv(&lunew[1], ln, MPI_DOUBLE, mpirank-rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(&lunew[ln*(ln+2) + 1], ln, MPI_DOUBLE, mpirank+rootp, 123, MPI_COMM_WORLD);
+      MPI_Recv(&lunew[(ln+1)*(ln+2) +1], ln, MPI_DOUBLE, mpirank-rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
     //deal with remaining
     else {
       MPI_Send(vertical1, ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
-      MPI_Recv(vertical4, ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, &status1);
-      MPI_Send(vertical2, ln, MPI_DOUBLE, 1, 123, MPI_COMM_WORLD);
-      MPI_Recv(vertical3, ln, MPI_DOUBLE, 1, 124, MPI_COMM_WORLD, &status1);
-      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
-      MPI_Recv(&lunew[1], ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, &status1);
-      MPI_Send(&lunew[ln*(ln+2) + 1], ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
-      MPI_Recv(&lunew[(ln+1)*(ln+2) +1], ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, &status1);
+      MPI_Recv(vertical4, ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(vertical2, ln, MPI_DOUBLE, mpirank+1, 123, MPI_COMM_WORLD);
+      MPI_Recv(vertical3, ln, MPI_DOUBLE, mpirank+1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank-rootp, 123, MPI_COMM_WORLD);
+      MPI_Recv(&lunew[1], ln, MPI_DOUBLE, mpirank-rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(&lunew[ln*(ln+2) + 1], ln, MPI_DOUBLE, mpirank+rootp, 123, MPI_COMM_WORLD);
+      MPI_Recv(&lunew[(ln+1)*(ln+2) +1], ln, MPI_DOUBLE, mpirank+rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
     for (int i = 0; i < ln; i++){

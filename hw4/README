@@ -1,0 +1,4 @@
+# The jacobi doesnt run properly
+
+mpirun -np <NUM_THREADS> ./int_ring <LENGTH>
+mpirun -np <NUM_THREADS> ./scan_mpi <LENGTH>

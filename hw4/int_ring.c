@@ -51,7 +51,8 @@ int main(int argc, char** argv) {
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &np);
   
-  int N = 10;
+  sscanf(argv[1], "%d", &N);
+
   /*
   int* package = (int *) calloc(sizeof(int), 1);
   int N = 10;

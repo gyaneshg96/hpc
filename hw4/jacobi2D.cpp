@@ -9,7 +9,7 @@ double compute_residual(double *lu, int ln, double invhsq){
   double tmp, gres = 0.0, lres = 0.0;
 
   for (i = 1; i <= ln; i++){
-    for (int j = 1; j <= ln; i++){
+    for (int j = 1; j <= ln; j++){
     tmp = ((4.0*lu[i*(ln+2) + j]
          - lu[(i-1)*(ln+2) + j]
          - lu[(i+1)*(ln+2) + j]
@@ -56,6 +56,7 @@ int main(int argc, char * argv[]){
   int ln = (int) sqrt(lN);
   int rootp = (int) sqrt(p);
 
+  if (!mpirank) printf("%d %d\n", ln, rootp);
   /* Allocation of vectors, including left/upper and right/lower ghost points */
   double * lu    = (double *) calloc(sizeof(double), (ln + 2)*(ln + 2));
   double * lunew = (double *) calloc(sizeof(double), (ln + 2)*(ln + 2));
@@ -70,11 +71,14 @@ int main(int argc, char * argv[]){
   double h = 1.0 / (N + 1)*(N + 1);
   double hsq = h * h;
   double invhsq = 1./hsq;
-  double gres, gres0, tol = 1e-5;
+  double gres = 0.0, gres0 = 0.0, tol = 1e-5;
 
   /* initial residual */
-  gres0 = compute_residual(lu, lN, invhsq);
+  gres0 = compute_residual(lu, ln, invhsq);
+  printf("Residual %g \n", gres0);
   gres = gres0;
+
+  MPI_Barrier(MPI_COMM_WORLD);
 
   for (iter = 0; iter < max_iters && gres/gres0 > tol; iter++) {
 
@@ -98,77 +102,91 @@ int main(int argc, char * argv[]){
     }
     /* communicate ghost values */
 
+    MPI_Barrier(MPI_COMM_WORLD);
     //can be done more elegantly
-
     //deal with corners
     if (mpirank == 0){
+      printf("Rank %d\n", mpirank);
       MPI_Send(vertical2, ln, MPI_DOUBLE, 1, 123, MPI_COMM_WORLD);
+      MPI_Send(&lunew[ln*(ln+2) + 1], ln, MPI_DOUBLE, rootp, 125, MPI_COMM_WORLD);
       MPI_Recv(vertical3, ln, MPI_DOUBLE, 1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      MPI_Send(&lunew[ln*(ln+2) + 1], ln, MPI_DOUBLE, rootp, 123, MPI_COMM_WORLD);
-      MPI_Recv(&lunew[(ln+1)*(ln+2) + 1], ln, MPI_DOUBLE, rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Recv(&lunew[(ln+1)*(ln+2) + 1], ln, MPI_DOUBLE, rootp, 126, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
     else if (mpirank == p - 1){
-      MPI_Send(vertical1, ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
-      MPI_Recv(vertical4, ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank - rootp, 123, MPI_COMM_WORLD);
-      MPI_Recv(&lunew[1], ln, MPI_DOUBLE, mpirank - rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      printf("Rank %d\n", mpirank);
+      MPI_Recv(vertical4, ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Recv(&lunew[1], ln, MPI_DOUBLE, mpirank - rootp, 125, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(vertical1, ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD);
+      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank - rootp, 126, MPI_COMM_WORLD);
     }
     else if (mpirank == rootp - 1){
-      MPI_Send(vertical1, ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
-      MPI_Recv(vertical4, ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      MPI_Send(&lunew[ln*(ln+2) + 1], ln, MPI_DOUBLE, mpirank + rootp, 123, MPI_COMM_WORLD);
-      MPI_Recv(&lunew[(ln+1)*(ln+2) +1], ln, MPI_DOUBLE, mpirank + rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      printf("Rank %d\n", mpirank);
+      MPI_Recv(vertical4, ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(vertical1, ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD);
+      MPI_Send(&lunew[ln*(ln+2) + 1], ln, MPI_DOUBLE, mpirank + rootp, 125, MPI_COMM_WORLD);
+      MPI_Recv(&lunew[(ln+1)*(ln+2) +1], ln, MPI_DOUBLE, mpirank + rootp, 126, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
     else if (mpirank == rootp*(rootp - 1)){
+      printf("Rank %d\n", mpirank);
+      MPI_Recv(&lunew[1], ln, MPI_DOUBLE, mpirank-rootp, 125, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank-rootp, 126, MPI_COMM_WORLD);
       MPI_Send(vertical2, ln, MPI_DOUBLE, mpirank+1, 123, MPI_COMM_WORLD);
       MPI_Recv(vertical3, ln, MPI_DOUBLE, mpirank+1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank-rootp, 123, MPI_COMM_WORLD);
-      MPI_Recv(&lunew[1], ln, MPI_DOUBLE, mpirank-rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
     //deal with edges
     else if (mpirank < rootp - 1) {
-      MPI_Send(vertical1, ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
-      MPI_Recv(vertical4, ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      printf("Rank %d\n", mpirank);
+      MPI_Recv(vertical4, ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(vertical1, ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD);
       MPI_Send(vertical2, ln, MPI_DOUBLE, mpirank+1, 123, MPI_COMM_WORLD);
-      MPI_Recv(vertical3, ln, MPI_DOUBLE, mpirank+1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       MPI_Send(&lunew[ln*(ln+2) + 1], ln, MPI_DOUBLE, mpirank+rootp, 123, MPI_COMM_WORLD);
+      MPI_Recv(vertical3, ln, MPI_DOUBLE, mpirank+1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       MPI_Recv(&lunew[(ln+1)*(ln+2) +1], ln, MPI_DOUBLE, mpirank+rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      printf("Rank X %d\n", mpirank);
     }
     else if (mpirank > rootp*(rootp - 1)) {
-      MPI_Send(vertical1, ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
+      printf("Rank %d\n", mpirank);
       MPI_Recv(vertical4, ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      MPI_Send(vertical2, ln, MPI_DOUBLE, mpirank+1, 123, MPI_COMM_WORLD);
-      MPI_Recv(vertical3, ln, MPI_DOUBLE, mpirank+1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank-rootp, 123, MPI_COMM_WORLD);
       MPI_Recv(&lunew[1], ln, MPI_DOUBLE, mpirank-rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(vertical1, ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
+      MPI_Send(vertical2, ln, MPI_DOUBLE, mpirank+1, 123, MPI_COMM_WORLD);
+      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank-rootp, 123, MPI_COMM_WORLD);
+      MPI_Recv(vertical3, ln, MPI_DOUBLE, mpirank+1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      printf("Rank X %d\n", mpirank);
     }
     else if (mpirank % rootp == 0){
-      MPI_Send(vertical2, ln, MPI_DOUBLE, mpirank+1, 123, MPI_COMM_WORLD);
-      MPI_Recv(vertical3, ln, MPI_DOUBLE, mpirank+1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank-rootp, 123, MPI_COMM_WORLD);
+      printf("Rank %d\n", mpirank);
       MPI_Recv(&lunew[1], ln, MPI_DOUBLE, mpirank-rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank-rootp, 123, MPI_COMM_WORLD);
+      MPI_Send(vertical2, ln, MPI_DOUBLE, mpirank+1, 123, MPI_COMM_WORLD);
       MPI_Send(&lunew[ln*(ln+2) + 1], ln, MPI_DOUBLE, mpirank+rootp, 123, MPI_COMM_WORLD);
+      MPI_Recv(vertical3, ln, MPI_DOUBLE, mpirank+1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       MPI_Recv(&lunew[(ln+1)*(ln+2) +1], ln, MPI_DOUBLE, mpirank+rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      printf("Rank X %d\n", mpirank);
     }
     else if (mpirank % rootp == rootp - 1){
-      MPI_Send(vertical1, ln, MPI_DOUBLE, mpirank - 1, 123, MPI_COMM_WORLD);
+      printf("Rank %d\n", mpirank);
       MPI_Recv(vertical4, ln, MPI_DOUBLE, mpirank - 1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank-rootp, 123, MPI_COMM_WORLD);
       MPI_Recv(&lunew[1], ln, MPI_DOUBLE, mpirank-rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(vertical1, ln, MPI_DOUBLE, mpirank - 1, 123, MPI_COMM_WORLD);
+      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank-rootp, 123, MPI_COMM_WORLD);
       MPI_Send(&lunew[ln*(ln+2) + 1], ln, MPI_DOUBLE, mpirank+rootp, 123, MPI_COMM_WORLD);
-      MPI_Recv(&lunew[(ln+1)*(ln+2) +1], ln, MPI_DOUBLE, mpirank-rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Recv(&lunew[(ln+1)*(ln+2) +1], ln, MPI_DOUBLE, mpirank+rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      printf("Rank X %d\n", mpirank);
     }
     //deal with remaining
     else {
-      MPI_Send(vertical1, ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
+      printf("Rank %d\n", mpirank);
       MPI_Recv(vertical4, ln, MPI_DOUBLE, mpirank-1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      MPI_Send(vertical2, ln, MPI_DOUBLE, mpirank+1, 123, MPI_COMM_WORLD);
-      MPI_Recv(vertical3, ln, MPI_DOUBLE, mpirank+1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank-rootp, 123, MPI_COMM_WORLD);
       MPI_Recv(&lunew[1], ln, MPI_DOUBLE, mpirank-rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Send(vertical1, ln, MPI_DOUBLE, mpirank-1, 123, MPI_COMM_WORLD);
+      MPI_Send(&lunew[ln+2 + 1], ln, MPI_DOUBLE, mpirank-rootp, 123, MPI_COMM_WORLD);
+      MPI_Send(vertical2, ln, MPI_DOUBLE, mpirank+1, 123, MPI_COMM_WORLD);
       MPI_Send(&lunew[ln*(ln+2) + 1], ln, MPI_DOUBLE, mpirank+rootp, 123, MPI_COMM_WORLD);
       MPI_Recv(&lunew[(ln+1)*(ln+2) +1], ln, MPI_DOUBLE, mpirank+rootp, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Recv(vertical3, ln, MPI_DOUBLE, mpirank+1, 124, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      printf("Rank X %d\n", mpirank);
     }
 
     for (int i = 0; i < ln; i++){
@@ -178,11 +196,11 @@ int main(int argc, char * argv[]){
       lunew[i*(ln+2)] = vertical4[i];
     }
 
-
+	MPI_Barrier(MPI_COMM_WORLD);
     /* copy newu to u using pointer flipping */
     lutemp = lu; lu = lunew; lunew = lutemp;
     if (0 == (iter % 10)) {
-      gres = compute_residual(lu, lN, invhsq);
+      gres = compute_residual(lu, ln, invhsq);
       if (0 == mpirank) {
 	printf("Iter %d: Residual: %g\n", iter, gres);
       }

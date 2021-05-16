@@ -1,0 +1,24 @@
+i)Dot Product
+
+Size : 1<<25
+
+CPU bandwidth : 2.986211 GB/s
+RTX8000 bandwidth : 136.822416 GB/s
+V100 bandwidth : 392.082957 GB/s 
+
+ii) Matrix Product
+
+Size: 1000 X 100000
+
+CPU bandwidth : 3.018906 GB/s
+RTX8000 bandwidth : 45.615129 GB/s
+V100 bandwidth : 85.925854 GB/s 
+
+iii) Jacobi
+
+Size: 1000 X 1000
+
+Time Taken for serial : 38.746561s
+Time Taken for RTX8000 : 0.461300s
+Time Taken for V100 :  0.342947
+

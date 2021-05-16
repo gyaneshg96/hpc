@@ -53,31 +53,11 @@ int main(int argc, char** argv) {
   
   sscanf(argv[1], "%d", &N);
 
-  /*
-  int* package = (int *) calloc(sizeof(int), 1);
-  int N = 10;
-  for (int i = 0; i < N; i++){
-    if (rank == 0){
-      if (i == 0)
-        package = 0;
-      MPI_Send(package, length, MPI_INT, 1, i, comm);
-      MPI_Recv(package, length, MPI_INT, np-1, i, comm, &status);
-    }
-    // else if (rank == np - 1 && i == N-1)
-      // MPI_Recv(&package, 1, MPI_INT, rank - 1, i, comm, &status);
-    else {
-      MPI_Recv(package, length, MPI_INT, (rank - 1)%np, i, comm, &status);
-      for (int j = 0; j < length; j++)
-        *(package + j) += rank;
-      MPI_Send(&package, length, MPI_INT, (rank + 1)%np, i, comm);
-    }
-  }
-  */
   int* package = (int *) calloc(sizeof(int), 1);
   double tt = ring_function(package, 1, N, comm);
   double latency = tt/(N*np)*1000;
   if (rank == 0){
-    printf("%d Value \n", *package);
+    printf("Value %d \n", *package);
     printf("Latency: %e ms \n", latency );
   }
 

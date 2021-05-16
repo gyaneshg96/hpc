@@ -1,5 +1,5 @@
 CXX = mpicxx # or mpicxx
-CXXFLAGS = -std=c++11 -O3 -march=native -fopenmp
+CXXFLAGS = -std=c++11 -O3 -march=native
 
 TARGETS = $(basename $(wildcard *.cpp)) $(basename $(wildcard *.c))
 

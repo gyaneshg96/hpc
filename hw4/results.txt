@@ -1,0 +1,8 @@
+Q1:
+pingpong latency: 2.063540e-03 ms
+pingpong bandwidth: 2.459635e+01 GB/s
+
+Q2:
+
+Latency: 4.327891e-04 ms
+Bandwidth: 5.866103e-03 ms
